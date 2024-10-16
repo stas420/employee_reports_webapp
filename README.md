@@ -1,4 +1,4 @@
-Software Engineering @ ICT AGH project
+## Software Engineering @ ICT AGH project
 ___
 
 **Directories**:
