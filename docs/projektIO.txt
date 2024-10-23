@@ -1,0 +1,11 @@
+Plan projektu 
+
+1. aplikacja do logowania
+-pulpit dla admina z generowaniem raportów
+-filtrowanie po IP ( adres agh np )
+Technologia: flask+bootstrap
+2. baza z danymi z użytkownikami i do raportów w xls
+- +admin 
+Technologia: flask+sqlite3
+3. aplikacja generująca raport w xls
+Technologia: flask, python
