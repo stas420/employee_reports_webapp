@@ -4,7 +4,7 @@
     --nice-n-purple: #7c4ec2;
 }
 
-.user-main-page {
+.main-page {
     position: absolute;
     top: 0px;
     left: 0px;
@@ -22,7 +22,7 @@
     overflow-y: hidden;
 }
 
-.user-header {
+.header {
     display: flex;
     width: 100%;
     color: white;
@@ -128,6 +128,43 @@ label {
     margin: 5px;
 }
 
+.admin-login-button {
+    background-color: var(--white-colour);
+    position: relative;
+    align-self: flex-end;
+    font-size: large;
+    font-weight: bold;
+    text-align: center;
+    align-content: center;
+
+    border: 4px solid var(--white-colour);
+    border-radius: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-top: 20px;
+    width:fit-content;
+}
+
+.admin-login-button:hover {
+    background-color: var(--nice-n-purple);
+    color: var(--white-colour);
+    border: 4px solid var(--white-colour);
+    cursor: pointer;
+}
+
+.admin-failed-login-text {
+    color: #c22317;
+    font-size: medium;
+    font-weight: bold;
+    text-align: center;
+}
+
+.admin-bottom-text {
+    margin-top: 15px;
+    font-size: medium;
+}
 
 .user-submit-button {
     background-color: var(--white-colour);
@@ -153,4 +190,67 @@ label {
     color: var(--white-colour);
     border: 4px solid var(--white-colour);
     cursor: pointer;
+}
+
+.panel-report-section {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    grid-template-rows: repeat(4, auto);
+
+    background-color: var(--white-colour);
+    padding: inherit;
+    position: relative;
+    border-radius: 10px;
+    width: 50%;
+    overflow-y: hidden;
+    margin-top: 10px;
+}
+
+.panel-report-section-item {
+    padding: inherit;
+    text-align: left;
+    align-items: center;
+    margin: 8px;
+    padding: inherit;
+
+    border: 5px solid;
+    border-color: var(--white-colour);
+    border-radius: 10px;
+}
+
+.panel-report-download-button {
+    background-color: var(--bg-colour);
+    color: var(--white-colour);
+    position: relative;
+    align-self: flex-end;
+    font-size: large;
+    font-weight: bold;
+    text-align: center;
+    align-content: center;
+
+    border: 4px solid var(--white-colour);
+    border-radius: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-top: 20px;
+    width: fit-content;
+}
+.panel-report-download-button:hover {
+    background-color: var(--nice-n-purple);
+    color: var(--white-colour);
+    border: 4px solid var(--white-colour);
+    cursor: pointer;
+}
+
+.panel-users-section {
+    background-color: var(--nice-n-purple);
+    color: var(--white-colour);
+    padding: inherit;
+    position: relative;
+    border-radius: 10px;
+    width: 50%;
+    overflow-y: hidden;
+    margin-top: 10px;
 }

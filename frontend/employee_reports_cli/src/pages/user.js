@@ -1,6 +1,5 @@
-// src/pages/User.js
 import React from 'react';
-import "./user.css";
+import "./styles.css";
 import { useState } from 'react';
 import { registerUsersTime } from '../utils/registrations'
 import { useNavigate } from 'react-router-dom';
@@ -14,8 +13,8 @@ function User() {
   const navigate = useNavigate();
 
   return (
-    <div className='user-main-page'>
-      <div className='user-header'>
+    <div className='main-page'>
+      <div className='header'>
         work time registration for employees
         <div 
           className='user-admin-button'
