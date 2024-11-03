@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminLogIn } from '../utils/adminUtils';
+import { Helmet } from 'react-helmet-async';
 import './styles.css';
 
 function Admin() {
@@ -23,6 +24,10 @@ function Admin() {
 
   return (
         <div className='main-page'>
+          <Helmet>
+            <title>admin panel login - administration of employees work time and credentials</title>
+            <meta name="description" content="admin panel login - administration of employees work time and credentials" />
+          </Helmet>
           <div className='header'>
             work time administration panel - login
             <div 
@@ -32,7 +37,7 @@ function Admin() {
                 employee
             </div>
           </div>
-          <div className='user-form'>
+          <div className='admin-form'>
                 <div 
                   className='user-form-item'
                 >
@@ -69,9 +74,10 @@ function Admin() {
                     >
                     </input>
                 </div>
+                <div></div>
                 <div className='admin-failed-login-text'>
                     <label>
-                        {loginFailed ? "log-in failed, try again please" : null}
+                        {loginFailed ? "log-in failed, try again please" : ""}
                     </label>
                 </div>
           </div>

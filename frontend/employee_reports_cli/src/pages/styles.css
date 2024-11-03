@@ -65,7 +65,9 @@
     padding: inherit;
     position: relative;
     border-radius: 10px;
-    width: 50%;
+    max-width: 50%;
+    width:fit-content;
+    overflow-x: hidden;
     overflow-y: hidden;
 }
 
@@ -128,6 +130,19 @@ label {
     margin: 5px;
 }
 
+.admin-form {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    grid-template-rows: repeat(6, auto);
+
+    background-color: var(--white-colour);
+    padding: inherit;
+    position: relative;
+    border-radius: 10px;
+    max-width: 50%;
+    width:max-content;
+}
+
 .admin-login-button {
     background-color: var(--white-colour);
     position: relative;
@@ -161,6 +176,12 @@ label {
     text-align: center;
 }
 
+.user-failed-register-text {
+    color: #c22317;
+    font-size: medium;
+    font-weight: bold;
+    text-align: center;
+}
 .admin-bottom-text {
     margin-top: 15px;
     font-size: medium;
@@ -195,22 +216,30 @@ label {
 .panel-report-section {
     display: grid;
     grid-template-columns: repeat(2, auto);
-    grid-template-rows: repeat(4, auto);
+    grid-template-rows: repeat(3, auto);
 
     background-color: var(--white-colour);
     padding: inherit;
-    position: relative;
     border-radius: 10px;
-    width: 50%;
-    overflow-y: hidden;
+    max-width: 50%;
+    width: max-content;
     margin-top: 10px;
+
+    justify-content: space-around;
+    justify-items: center;
+    align-content: center;
+    align-items: center;
+    overflow-x: hidden;
 }
 
 .panel-report-section-item {
     padding: inherit;
     text-align: left;
+    justify-content: center;
+    justify-items: center;
+    align-content: center;
     align-items: center;
-    margin: 8px;
+    margin: 10px;
     padding: inherit;
 
     border: 5px solid;
@@ -221,8 +250,6 @@ label {
 .panel-report-download-button {
     background-color: var(--bg-colour);
     color: var(--white-colour);
-    position: relative;
-    align-self: flex-end;
     font-size: large;
     font-weight: bold;
     text-align: center;
@@ -234,8 +261,9 @@ label {
     padding-right: 20px;
     padding-top: 10px;
     padding-bottom: 10px;
-    margin-top: 20px;
+    margin: 15px;
     width: fit-content;
+    top:0%;
 }
 .panel-report-download-button:hover {
     background-color: var(--nice-n-purple);
@@ -250,7 +278,19 @@ label {
     padding: inherit;
     position: relative;
     border-radius: 10px;
-    width: 50%;
+    max-width: 50%;
+    width: max-content;
     overflow-y: hidden;
     margin-top: 10px;
+}
+
+.panel-form-item-input-checkbox {
+    display:grid;
+    align-content: center;
+    align-items: center;
+    grid-template-columns: repeat(2, auto);
+    grid-template-rows: repeat(2, auto);
+
+    text-align: left;
+    top: 0%;
 }

@@ -6,17 +6,20 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import User from './pages/user';
 import Admin from './pages/admin';
 import AdminPanel from './pages/adminPanel';
+import { HelmetProvider } from 'react-helmet-async';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Navigate to="/user"/>}/>
-        <Route path="/user" element={<User />}/>
-        <Route path="/admin" element={<Admin />}/>
-        <Route path="/admin/panel" element={<AdminPanel />}/>
-      </Routes>
-    </Router>
+    <HelmetProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Navigate to="/user"/>}/>
+          <Route path="/user" element={<User />}/>
+          <Route path="/admin" element={<Admin />}/>
+          <Route path="/admin/panel" element={<AdminPanel />}/>
+        </Routes>
+      </Router>
+    </HelmetProvider>
   );
 }
 

@@ -5,7 +5,6 @@ export function registerUsersTime(
         "registerUsersTime called: " + ID + " " +
         Workstation + " " + Password +  " " + ifStartTime + "\n"
     )
-    /*
     
-    */
+    return (ID.length > 5);
 }
