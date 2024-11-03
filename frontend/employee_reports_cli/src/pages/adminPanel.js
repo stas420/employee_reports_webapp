@@ -8,13 +8,20 @@ import {
  } from '../utils/adminUtils';
 import './styles.css';
 import { Helmet } from 'react-helmet-async';
+import { getUsersList } from '../utils/adminUtils';
 
 function AdminPanel({ login }) {
 
+  const [data, updateData] = useState(getUsersList());
   const [selectedStartDate, selectStartDate] = useState(null);
   const [selectedEndDate, selectEndDate] = useState(null);
   const [ifSingleDate, checkSingleDate] = useState(true);
   const navigate = useNavigate();
+
+  const handleEdit = (id) => {
+    console.log(`Editing ID: ${id}`);
+    // Implement your edit logic here
+  };
 
   const requestReport = () => {
     if (ifSingleDate) {
@@ -94,9 +101,37 @@ function AdminPanel({ login }) {
             </div>
           </div>
           <div className='panel-users-section'>
+            <div className='panel-users-section-header'>
               <label>
-                here you will manage users
+                users database
               </label>
+              <div 
+                className='panel-users-update-button'
+                onClick={() => {updateData(getUsersList());}}
+              >
+                reload users
+              </div>
+            </div>
+            <table className='panel-users-database-table'>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Password</th>
+                  <th>Edit</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map(user => (
+                  <tr key={user.ID}>
+                    <td>{user.ID}</td>
+                    <td>{user.password}</td>
+                    <td>
+                      <button onClick={() => handleEdit(user.ID)}> edit </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+          </table>
           </div>
           <div className='admin-bottom-text'>
             in case of any errors, please contact your company's IT support team

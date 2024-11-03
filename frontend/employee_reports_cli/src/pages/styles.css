@@ -4,6 +4,30 @@
     --nice-n-purple: #7c4ec2;
 }
 
+input {
+    font-family: 'Comic Sans MS';
+    border-radius: 5px;
+    padding: 7px;
+}
+
+input:focus {
+    border-color: var(--bg-colour);
+    border-radius: 5px;   
+}
+
+input[type="checkbox"] {
+    width: 60%;
+    height: 60%;
+}
+
+input[type="file"] {
+    padding: 0px;
+}
+
+label {
+    margin: 5px;
+}
+
 .main-page {
     position: absolute;
     top: 0px;
@@ -74,6 +98,7 @@
 .user-form-item {
     padding: inherit;
     text-align: left;
+    justify-content: right;
     align-items: center;
     margin: 8px;
     padding: inherit;
@@ -110,24 +135,42 @@
     margin-bottom: 2px;
 }
 
-input {
-    font-family: 'Comic Sans MS';
-    border-radius: 5px;
-    padding: 7px;
+.user-failed-register-text {
+    color: #c22317;
+    font-size: medium;
+    font-weight: bold;
+    text-align: center;
 }
 
-input:focus {
-    border-color: var(--bg-colour);
-    border-radius: 5px;   
+.user-submit-button {
+    background-color: var(--white-colour);
+    position: relative;
+    align-self: flex-end;
+    font-size: large;
+    font-weight: bold;
+    text-align: center;
+    align-content: center;
+
+    border: 4px solid var(--white-colour);
+    border-radius: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-top: 20px;
+    width: min-content;
 }
 
-input[type="checkbox"] {
-    width: 60%;
-    height: 60%;
+.user-submit-button:hover {
+    background-color: var(--nice-n-purple);
+    color: var(--white-colour);
+    border: 4px solid var(--white-colour);
+    cursor: pointer;
 }
 
-label {
-    margin: 5px;
+.user-bottom-text {
+    margin-top: 15px;
+    font-size: medium;
 }
 
 .admin-form {
@@ -176,41 +219,9 @@ label {
     text-align: center;
 }
 
-.user-failed-register-text {
-    color: #c22317;
-    font-size: medium;
-    font-weight: bold;
-    text-align: center;
-}
 .admin-bottom-text {
     margin-top: 15px;
     font-size: medium;
-}
-
-.user-submit-button {
-    background-color: var(--white-colour);
-    position: relative;
-    align-self: flex-end;
-    font-size: large;
-    font-weight: bold;
-    text-align: center;
-    align-content: center;
-
-    border: 4px solid var(--white-colour);
-    border-radius: 10px;
-    padding-left: 20px;
-    padding-right: 20px;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    margin-top: 20px;
-    width: min-content;
-}
-
-.user-submit-button:hover {
-    background-color: var(--nice-n-purple);
-    color: var(--white-colour);
-    border: 4px solid var(--white-colour);
-    cursor: pointer;
 }
 
 .panel-report-section {
@@ -265,6 +276,7 @@ label {
     width: fit-content;
     top:0%;
 }
+
 .panel-report-download-button:hover {
     background-color: var(--nice-n-purple);
     color: var(--white-colour);
@@ -282,6 +294,57 @@ label {
     width: max-content;
     overflow-y: hidden;
     margin-top: 10px;
+}
+
+.panel-users-section-header {
+    display: flex;
+    align-items: center;
+    justify-items: center;
+    max-width: max-content;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.panel-users-update-button {
+    background-color: var(--white-colour);
+    color: var(--nice-n-purple);
+    font-size: medium;
+    font-weight: normal;
+    text-align: center;
+    align-content: center;
+
+    border: 4px solid var(--white-colour);
+    border-radius: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    margin: 15px;
+    width: fit-content;
+    top:0%;
+}
+
+.panel-users-update-button:hover {
+    background-color: var(--bg-colour);
+    color: var(--white-colour);
+    border: 4px solid var(--white-colour);
+    cursor: pointer;
+}
+
+.panel-users-database-table {
+    text-wrap: nowrap;
+    text-align: left;
+    align-content: center;
+    justify-content: center;
+    border-spacing: 10px;
+    position: relative;
+    display: unset;
+    width: 100%;
+}
+
+td {
+    padding: 3px;
+    max-width: fit-content;
 }
 
 .panel-form-item-input-checkbox {

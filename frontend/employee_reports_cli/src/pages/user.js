@@ -12,9 +12,20 @@ function User() {
   const [workstation, setWorkstation] = useState('');
   const [password, setPassword] = useState('');
   const [registrationFailed, setRegistrationFailed] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null);
 
   const navigate = useNavigate();
   const handleSubmit = () => {
+    if (
+        employeeId === null || employeeId === '' ||
+        workstation === null || workstation === '' ||
+        password === null || password === '' ||
+        uploadedFile === null
+    ) {
+        setRegistrationFailed(true);
+        return;
+    }
+
     const bool = registerUsersTime(employeeId, workstation, password, ifStartTime);
     
     setRegistrationFailed(bool);
@@ -23,6 +34,8 @@ function User() {
         setEmployeeId('');
         setWorkstation('');
         setPassword('');
+        setUploadedFile(null);
+        document.getElementById('user-file-input-box').value = '';
         toggleTimeType(true);
     }
   };
@@ -90,6 +103,27 @@ function User() {
                 </input>
             </div>
             <div className='user-form-item'>
+                your photo
+            </div>
+            <div className='user-form-item-input'>
+                <input 
+                    id='user-file-input-box'
+                    type='file'
+                    accept='image/*'
+                    onChange={(e) => {
+                        setRegistrationFailed(false);
+                        e.preventDefault();
+                        const file = e.target.files[0];
+                        
+                        if (file) {
+                            setUploadedFile(file);
+                        }
+                    }}
+                >
+                </input>
+            </div>
+
+            <div className='user-form-item'>
                 registration type:
             </div>
             <div className='user-form-item-input-checkbox'>
@@ -132,6 +166,9 @@ function User() {
         }}
       >
         submit
+      </div>
+      <div className='user-bottom-text'>
+            in case of any problems (for example forgotten password), <br/> please contact your company's IT support team
       </div>
     </div>
   );
