@@ -19,8 +19,7 @@ function AdminPanel({ login }) {
   const navigate = useNavigate();
 
   const handleEdit = (id) => {
-    console.log(`Editing ID: ${id}`);
-    // Implement your edit logic here
+    console.log(`Editing ID: ` + id);
   };
 
   const requestReport = () => {
@@ -39,7 +38,8 @@ function AdminPanel({ login }) {
             <meta name="description" content="admin panel - administration of employees work time and credentials" />
           </Helmet>
           <div className='header'>
-            work time administration panel
+            {"work time administration panel"} <br/>
+            {"logged as: " + login}
             <div 
               className='user-admin-button'
               onClick={() => {
@@ -126,7 +126,11 @@ function AdminPanel({ login }) {
                     <td>{user.ID}</td>
                     <td>{user.password}</td>
                     <td>
-                      <button onClick={() => handleEdit(user.ID)}> edit </button>
+                      <button 
+                        onClick={() => handleEdit(user.ID)}
+                      > 
+                        edit 
+                      </button>
                     </td>
                   </tr>
                 ))}
