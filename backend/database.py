@@ -32,10 +32,10 @@ def initialize_database(connection: sqlite3.Connection):
 
 def fetch_user(connection: sqlite3.Connection, employee_id: str) -> Optional['User']:
     cursor = connection.cursor()
-    cursor.execute('SELECT employee_id, hash_password, path_to_photo FROM users WHERE employee_id = ?', (str(employee_id),))
+    cursor.execute('SELECT employee_id, hash_password, path_to_photo FROM users WHERE employee_id = ?', (employee_id,))
     row = cursor.fetchone()
     if row:
-        return User(UUID(row[0]), row[1], row[2])
+        return User(row[0], row[1], row[2])
     return None
 
 def fetch_timestamp(connection: sqlite3.Connection, entry_id: str) -> Optional['Timestamp']:
@@ -43,14 +43,14 @@ def fetch_timestamp(connection: sqlite3.Connection, entry_id: str) -> Optional['
     cursor.execute('SELECT entry_id, employee_id, start_time, end_time, start_photo_path, end_photo_path FROM timestamps WHERE entry_id = ?', (str(entry_id),))
     row = cursor.fetchone()
     if row:
-        return Timestamp(UUID(row[0]), UUID(row[1]), datetime.fromisoformat(row[2]), datetime.fromisoformat(row[3]), row[4], row[5])
+        return Timestamp(UUID(row[0]), row[1], datetime.fromisoformat(row[2]), datetime.fromisoformat(row[3]), row[4], row[5])
     return None
 
 if __name__ == '__main__':
     connection = create_connection()
     initialize_database(connection)
     
-    user = User(uuid4(), hasher.sha256('password'.encode()).hexdigest(), 'example/path')
+    user = User('example_user_2137', hasher.sha256('password'.encode()).hexdigest(), 'example/path')
     print(user)
     user.insert_into_db(connection)
     read_user = fetch_user(connection, user.id)
