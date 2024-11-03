@@ -2,6 +2,7 @@ import sqlite3
 from models import *
 from typing import Optional
 import hashlib as hasher
+import bcrypt
 
 def create_connection() -> sqlite3.Connection:
     return sqlite3.connect('backend/database/database.db')
@@ -13,7 +14,8 @@ def initialize_database(connection: sqlite3.Connection):
         CREATE TABLE IF NOT EXISTS users (
             employee_id TEXT PRIMARY KEY,
             hash_password TEXT NOT NULL,
-            path_to_photo TEXT NOT NULL
+            path_to_photo TEXT NOT NULL,
+            is_admin BOOLEAN DEFAULT FALSE
         );
     ''')
     # Create timestamps table
@@ -32,10 +34,10 @@ def initialize_database(connection: sqlite3.Connection):
 
 def fetch_user(connection: sqlite3.Connection, employee_id: str) -> Optional['User']:
     cursor = connection.cursor()
-    cursor.execute('SELECT employee_id, hash_password, path_to_photo FROM users WHERE employee_id = ?', (employee_id,))
+    cursor.execute('SELECT employee_id, hash_password, path_to_photo, is_admin FROM users WHERE employee_id = ?', (employee_id,))
     row = cursor.fetchone()
     if row:
-        return User(row[0], row[1], row[2])
+        return User(row[0], row[1], row[2], row[3])
     return None
 
 def fetch_timestamp(connection: sqlite3.Connection, entry_id: str) -> Optional['Timestamp']:
@@ -50,16 +52,11 @@ if __name__ == '__main__':
     connection = create_connection()
     initialize_database(connection)
     
-    user = User('example_user_2137', hasher.sha256('password'.encode()).hexdigest(), 'example/path')
+    salt = bcrypt.gensalt()
+    user = User('example_user_2137', bcrypt.hashpw("password".encode(), salt), 'example/path', True)
     print(user)
     user.insert_into_db(connection)
     read_user = fetch_user(connection, user.id)
     print(read_user)
-
-    timestamp = Timestamp(uuid4(), user.id, datetime.now(), datetime.now(), 'example/path', 'example/path')
-    print(timestamp)
-    timestamp.insert_into_db(connection)
-    read_timestamp = fetch_timestamp(connection, timestamp.id)
-    print(read_timestamp)
-    connection.rollback()
+    connection.commit()
     connection.close()

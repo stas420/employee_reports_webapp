@@ -5,10 +5,11 @@ from sqlite3 import Connection
 import database as db
 
 class User:
-    def __init__(self, id : str, hash_password : str, path_to_photo : str):
+    def __init__(self, id : str, hash_password : str, path_to_photo : str, is_admin : bool):
         self.id = id
         self.hash_password = hash_password
         self.path_to_photo = path_to_photo
+        self.is_admin = is_admin
 
     def __str__ (self) -> str:
         return f'User: {self.id}, {self.hash_password}, {self.path_to_photo}'
@@ -19,7 +20,7 @@ class User:
             return False
 
         cursor = connection.cursor()
-        cursor.execute('INSERT INTO users (employee_id, hash_password, path_to_photo) VALUES (?, ?, ?)', (self.id, self.hash_password, self.path_to_photo))
+        cursor.execute('INSERT INTO users (employee_id, hash_password, path_to_photo, is_admin) VALUES (?, ?, ?, ?)', (self.id, self.hash_password, self.path_to_photo, self.is_admin))
         return True
     
     def update_in_db(self, connection: Connection) -> bool:
@@ -28,7 +29,7 @@ class User:
             return False
 
         cursor = connection.cursor()
-        cursor.execute('UPDATE users SET hash_password = ?, path_to_photo = ? WHERE employee_id = ?', (self.hash_password, self.path_to_photo, self.id))
+        cursor.execute('UPDATE users SET hash_password = ?, path_to_photo = ?, is_admin = ? WHERE employee_id = ?', (self.hash_password, self.path_to_photo, self.is_admin ,self.id))
         return True
 
 class Timestamp:
