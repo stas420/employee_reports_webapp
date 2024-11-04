@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { 
@@ -8,18 +8,45 @@ import {
  } from '../utils/adminUtils';
 import './styles.css';
 import { Helmet } from 'react-helmet-async';
-import { getUsersList } from '../utils/adminUtils';
+import { getUsersList, updateUser } from '../utils/adminUtils';
+import Modal from '../components/modal';
 
-function AdminPanel({ login }) {
+function AdminPanel() {
 
-  const [data, updateData] = useState(getUsersList());
+  const login = useLocation().state?.login;
+
+  const [data, updateData] = useState(getUsersList() || []);
   const [selectedStartDate, selectStartDate] = useState(null);
   const [selectedEndDate, selectEndDate] = useState(null);
   const [ifSingleDate, checkSingleDate] = useState(true);
+  const [editingUser, setEditingUser] = useState(null);
+
   const navigate = useNavigate();
 
   const handleEdit = (id) => {
     console.log(`Editing ID: ` + id);
+    updateData(getUsersList());
+    const user = data.find((user) => user.ID === id);
+    setEditingUser(user || {});
+  };
+
+  const handleSaveUser = (updatedUser) => {
+    console.log("user saved UwU" + updatedUser.ID + updatedUser.password);
+    
+    updateUser(updatedUser);
+
+    updateData((prevData) => {
+      return prevData.map((user) => user.ID === updatedUser.ID ? updatedUser : user)
+    });
+
+    setEditingUser(null);
+  };
+
+  const handleChangePassword = (newPassword) => {
+    setEditingUser((prevUser) => ({
+      ...prevUser,
+      password: newPassword
+    }));
   };
 
   const requestReport = () => {
@@ -38,8 +65,8 @@ function AdminPanel({ login }) {
             <meta name="description" content="admin panel - administration of employees work time and credentials" />
           </Helmet>
           <div className='header'>
-            {"work time administration panel"} <br/>
-            {"logged as: " + login}
+            work time administration panel <br/>
+            logged as: {login}
             <div 
               className='user-admin-button'
               onClick={() => {
@@ -107,7 +134,7 @@ function AdminPanel({ login }) {
               </label>
               <div 
                 className='panel-users-update-button'
-                onClick={() => {updateData(getUsersList());}}
+                onClick={() => {updateData(getUsersList() || []);}}
               >
                 reload users
               </div>
@@ -115,16 +142,16 @@ function AdminPanel({ login }) {
             <table className='panel-users-database-table'>
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Password</th>
-                  <th>Edit</th>
+                  <th>employeeID</th>
+                  <th>password</th>
+                  <th>edit credentials</th>
                 </tr>
               </thead>
               <tbody>
                 {data.map(user => (
                   <tr key={user.ID}>
                     <td>{user.ID}</td>
-                    <td>{user.password}</td>
+                    <td>***************</td>
                     <td>
                       <button 
                         onClick={() => handleEdit(user.ID)}
@@ -137,6 +164,15 @@ function AdminPanel({ login }) {
               </tbody>
           </table>
           </div>
+
+          <Modal
+            show={!!editingUser}
+            onClose={() => { setEditingUser(null); }}
+            user={editingUser || {}}
+            onSave={handleSaveUser}
+            onChangePassword={handleChangePassword}
+          />
+
           <div className='admin-bottom-text'>
             in case of any errors, please contact your company's IT support team
           </div>

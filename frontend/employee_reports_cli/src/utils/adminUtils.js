@@ -37,3 +37,7 @@ export function getUsersList() {
 
     return userArray;
 }
+
+export function updateUser(user) {
+    console.log('dd');
+}

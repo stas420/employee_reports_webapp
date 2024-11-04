@@ -15,7 +15,7 @@ function Admin() {
     const bool = adminLogIn(login, password);
 
     if (bool) {
-        navigate('/admin/panel', login);
+        navigate('/admin/panel', { state : { login } });
     }
     else {
         setLoginFailed(true);
