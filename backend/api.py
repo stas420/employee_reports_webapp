@@ -8,6 +8,8 @@ from dotenv import dotenv_values
 import bcrypt
 import datetime as dt
 from datetime import datetime
+from report import Report
+from io import BytesIO
 import os
 
 config = dotenv_values()
@@ -33,21 +35,7 @@ def role_required(role):
         return decorator
     return wrapper
 
-@app.route('/user/login', methods=['POST'])
-def user_login():
-    data = request.get_json()
-    if 'employee_id' not in data or 'password' not in data:
-        return jsonify(message='Missing employee_id or password'), 400
-    connection = db.create_connection()
-    user: User | None = User.fetch_from_db(data['employee_id'], connection)
-    if not user:
-        return jsonify(message='User not found'), 404
-    connection.close()
-    if user and bcrypt.checkpw(data['password'].encode(), user.hash_password.encode()):
-        access_token = create_access_token(identity=user.id, additional_claims={"role": "employee"})
-        return jsonify(access_token=access_token)
 
-    return jsonify(message='Invalid credentials'), 401
 
 @app.route('/admin/login', methods=['POST'])
 def admin_login():
@@ -66,10 +54,8 @@ def admin_login():
         return jsonify(access_token=access_token)
     return jsonify(message='Invalid credentials'), 401
 
-@role_required('employee')
 @app.route('/user/report', methods=['POST'])
 def user_report():
-
     if 'start_photo' not in request.files or 'end_photo' not in request.files:
         return jsonify(message='Missing file(s)'), 400
     
@@ -88,14 +74,21 @@ def user_report():
     end_photo.save(end_photo_path)
 
     data = request.get_json()
+    
+    if all(key in data for key in ['employee_id', 'password', 'position', 'start_time', 'end_time']):
+        return jsonify(message="Missing data in json body"), 400
+
     connection = db.create_connection()  # Create a new connection for each request
     try:
-        user = User.fetch_from_db(get_jwt_identity(), connection)
+        user = User.fetch_from_db(data['employee_id'], connection)
         if not user:
             return jsonify(message='User not found'), 404
+        if not user.authenticate(data['password']):
+            return jsonify(message='Invalid credentials'), 401
         timestamp = Timestamp(
-            uuid4(),
+            timestamp_id,
             user.id, 
+            data['position'],
             datetime.fromisoformat(data['start_time']), 
             datetime.fromisoformat(data['start_time']), 
             start_photo_path, 
@@ -121,7 +114,7 @@ def admin_get_users():
 @app.route('/admin/users', methods=['POST'])
 def admin_create_user():
     data = request.get_json()
-    if 'employee_id' not in data or 'hash_password' not in data or 'path_to_photo' not in data:
+    if all(key in data for key in ['employee_id', 'hash_password', 'path_to_photo']):
         return jsonify(message='Missing employee_id, hash_password or path_to_photo'), 400
     connection = db.create_connection()
     try:
@@ -137,7 +130,7 @@ def admin_create_user():
 @app.route('/admin/users', methods=['PUT'])
 def admin_update_user():
     data = request.get_json()
-    if 'employee_id' not in data or 'hash_password' not in data or 'path_to_photo' not in data:
+    if all(key in data for key in ['employee_id', 'hash_password', 'path_to_photo']):
         return jsonify(message='Missing employee_id, hash_password or path_to_photo'), 400
     connection = db.create_connection()
     try:
@@ -175,6 +168,58 @@ def admin_get_timestamps():
         timestamps = Timestamp.fetch_all_from_db(connection)
     connection.close()
     return jsonify(timestamps=[timestamp.to_dict() for timestamp in timestamps])
+
+@role_required('admin')
+@app.route('/admin/timestamps/bydate', methods=['POST'])
+def admin_get_timestamps_by_date():
+    data = request.get_json()
+    if all(key in data for key in ['start_date', 'end_date']):
+        return jsonify(message='Missing start_date or end_date'), 400
+    try:
+        start_date = datetime.fromisoformat(data['start_date'])
+        end_date = datetime.fromisoformat(data['end_date'])
+
+        if start_date > end_date:
+            raise ValueError('start_date cannot be greater than end_date')
+    except ValueError:
+        return jsonify(message='Invalid date format'), 400
+    
+    connection = db.create_connection()
+    filter_func = lambda timestamp: timestamp.start_time >= start_date and timestamp.start_time <= end_date
+    timestamps = Timestamp.fetch_all_if(filter_func, connection)
+    connection.close()
+    if not timestamps:
+        return jsonify(message='No timestamps found'), 404
+    return jsonify(timestamps=[timestamp.to_dict() for timestamp in timestamps])
+
+@role_required('admin')
+@app.route('/admin/timestamps/report', methods=['POST'])
+def admin_get_report():
+    data = request.get_json()
+    if all(key in data for key in ['start_date', 'end_date']):
+        return jsonify(message='Missing start_date or end_date'), 400
+    try:
+        start_date = datetime.fromisoformat(data['start_date'])
+        end_date = datetime.fromisoformat(data['end_date'])
+
+        if start_date > end_date:
+            raise ValueError('start_date cannot be greater than end_date')
+    except ValueError:
+        return jsonify(message='Invalid date format'), 400
+    
+    connection = db.create_connection()
+    timestamps = Timestamp.fetch_all_for_duration(start_date, end_date, connection)
+    connection.close()
+    report = Report(timestamps)
+    wb = report.generate_report()
+    if not wb:
+        return jsonify(message='Error generating report'), 500
+    output_bytes = BytesIO()
+    wb.save(output_bytes)
+    output_bytes.seek(0)
+
+    return output_bytes, 200, {'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Content-Disposition': 'attachment; filename=report.xlsx'}
+
 
 
 if __name__ == '__main__':

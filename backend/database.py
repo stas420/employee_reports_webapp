@@ -1,4 +1,6 @@
 import sqlite3
+from models import User, Timestamp
+import bcrypt as bc
 
 
 def create_connection() -> sqlite3.Connection:
@@ -20,11 +22,23 @@ def initialize_database(connection: sqlite3.Connection):
         CREATE TABLE IF NOT EXISTS timestamps (
             entry_id TEXT PRIMARY KEY,
             employee_id TEXT NOT NULL,
+            position TEXT NOT NULL,
             start_time DATETIME NOT NULL,
-            end_time DATETIME NOT NULL,
+            end_time DATETIME,
             start_photo_path TEXT NOT NULL,
-            end_photo_path TEXT NOT NULL,
+            end_photo_path TEXT,
             FOREIGN KEY(employee_id) REFERENCES users(employee_id)
         );
     ''')
     connection.commit()
+
+if __name__ == '__main__':
+    connection = create_connection()
+    initialize_database(connection)
+    salt = bc.gensalt()
+    pw_hash = str(bc.hashpw('password'.encode(), salt))
+    print(pw_hash)
+    user = User('example_user_2137', pw_hash, 'path/to/photo', True)
+    user.insert_into_db(connection)
+    connection.commit()
+    connection.close()
