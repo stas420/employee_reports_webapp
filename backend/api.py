@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_restful import Api, Resource
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt
 from uuid import uuid4
 import database as db
 from models import *
@@ -10,15 +10,19 @@ import datetime as dt
 from datetime import datetime
 from report import Report
 from io import BytesIO
+import ipaddress
+from functools import wraps
 import os
 
 config = dotenv_values()
-if not config or not config.get('JWT_SECRET_KEY'):
-    raise ValueError('Missing JWT_SECRET_KEY in .env file')
+if not config or not config.get('JWT_SECRET_KEY') or not config.get('IP_WHITELIST'):
+    raise ValueError('Missing JWT_SECRET_KEY or IP_WHITELIST in .env file')
 app = Flask(__name__)
 api = Api(app)
 app.config['JWT_SECRET_KEY'] = config['JWT_SECRET_KEY']
 jwt = JWTManager(app)
+
+IP_RANGE = ipaddress.ip_network(config['IP_WHITELIST'] or '0.0.0.0/0')
 
 UPLOAD_FOLDER = 'backend/photos'
 if not os.path.exists(UPLOAD_FOLDER):
@@ -35,8 +39,20 @@ def role_required(role):
         return decorator
     return wrapper
 
+def ip_required(allowed_ip_network: ipaddress.IPv4Network | ipaddress.IPv6Network):
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            client_ip_str = request.remote_addr
+            if not client_ip_str:
+                return jsonify(message='Client IP not found'), 400
+            client_ip : ipaddress.IPv4Address | ipaddress.IPv6Address = ipaddress.ip_address(client_ip_str)
+            if client_ip not in allowed_ip_network:
+                return jsonify(message='Access forbidden: Invalid IP'), 403
+        return wrapper
+    return decorator
 
-
+@ip_required(IP_RANGE)
 @app.route('/admin/login', methods=['POST'])
 def admin_login():
     data = request.get_json()
@@ -54,6 +70,7 @@ def admin_login():
         return jsonify(access_token=access_token)
     return jsonify(message='Invalid credentials'), 401
 
+@ip_required(IP_RANGE)
 @app.route('/user/report', methods=['POST'])
 def user_report():
     if 'start_photo' not in request.files or 'end_photo' not in request.files:
@@ -102,6 +119,7 @@ def user_report():
     finally:
         connection.close()  # Ensure the connection is closed after the request
 
+@ip_required(IP_RANGE)
 @role_required('admin')
 @app.route('/admin/users', methods=['GET'])
 def admin_get_users():
@@ -110,11 +128,12 @@ def admin_get_users():
     connection.close()
     return jsonify(users=[user.to_dict() for user in users])
 
+@ip_required(IP_RANGE)
 @role_required('admin')
 @app.route('/admin/users', methods=['POST'])
 def admin_create_user():
     data = request.get_json()
-    if all(key in data for key in ['employee_id', 'hash_password', 'path_to_photo']):
+    if not all(key in data for key in ['employee_id', 'hash_password', 'path_to_photo']):
         return jsonify(message='Missing employee_id, hash_password or path_to_photo'), 400
     connection = db.create_connection()
     try:
@@ -126,11 +145,12 @@ def admin_create_user():
     finally:
         connection.close()
 
+@ip_required(IP_RANGE)
 @role_required('admin')
 @app.route('/admin/users', methods=['PUT'])
 def admin_update_user():
     data = request.get_json()
-    if all(key in data for key in ['employee_id', 'hash_password', 'path_to_photo']):
+    if not all(key in data for key in ['employee_id', 'hash_password', 'path_to_photo']):
         return jsonify(message='Missing employee_id, hash_password or path_to_photo'), 400
     connection = db.create_connection()
     try:
@@ -142,6 +162,7 @@ def admin_update_user():
     finally:
         connection.close()
 
+@ip_required(IP_RANGE)
 @role_required('admin')
 @app.route('/admin/users', methods=['DELETE'])
 def admin_delete_user():
@@ -158,6 +179,7 @@ def admin_delete_user():
     finally:
         connection.close()
 
+@ip_required(IP_RANGE)
 @role_required('admin')
 @app.route('/admin/timestamps', methods=['GET'])
 def admin_get_timestamps():
@@ -169,11 +191,12 @@ def admin_get_timestamps():
     connection.close()
     return jsonify(timestamps=[timestamp.to_dict() for timestamp in timestamps])
 
+@ip_required(IP_RANGE)
 @role_required('admin')
 @app.route('/admin/timestamps/bydate', methods=['POST'])
 def admin_get_timestamps_by_date():
     data = request.get_json()
-    if all(key in data for key in ['start_date', 'end_date']):
+    if not all(key in data for key in ['start_date', 'end_date']):
         return jsonify(message='Missing start_date or end_date'), 400
     try:
         start_date = datetime.fromisoformat(data['start_date'])
@@ -192,11 +215,12 @@ def admin_get_timestamps_by_date():
         return jsonify(message='No timestamps found'), 404
     return jsonify(timestamps=[timestamp.to_dict() for timestamp in timestamps])
 
+@ip_required(IP_RANGE)
 @role_required('admin')
 @app.route('/admin/timestamps/report', methods=['POST'])
 def admin_get_report():
     data = request.get_json()
-    if all(key in data for key in ['start_date', 'end_date']):
+    if not all(key in data for key in ['start_date', 'end_date']):
         return jsonify(message='Missing start_date or end_date'), 400
     try:
         start_date = datetime.fromisoformat(data['start_date'])
