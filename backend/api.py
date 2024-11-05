@@ -74,53 +74,70 @@ def admin_login():
     return jsonify(message='Invalid credentials'), 401
 
 @ip_required(IP_RANGE)
-@app.route('/user/report', methods=['POST'])
+@app.route('/user/report/start', methods=['POST'])
 def user_report():
-    if 'start_photo' not in request.files or 'end_photo' not in request.files:
-        return jsonify(message='Missing file(s)'), 400
-    
-    start_photo = request.files['start_photo']
-    end_photo = request.files['end_photo']
-
-    if start_photo.filename == '' or end_photo.filename == '':
-        return jsonify(message='No selected file(s)'), 400
-
-    timestamp_id = uuid4()
-
-    start_photo_path = os.path.join(UPLOAD_FOLDER, f"{timestamp_id}_{start_photo.filename}")
-    end_photo_path = os.path.join(UPLOAD_FOLDER, f"{timestamp_id}_{end_photo.filename}")
-
-    start_photo.save(start_photo_path)
-    end_photo.save(end_photo_path)
-
+    if not all(key in request.files for key in ['start_time', 'employee_id', 'password', 'position']):
+        return jsonify(message='Missing data from json'), 400
+    if not request.files['start_photo']:
+        return jsonify(message='Missing start_photo file'), 400
     data = request.get_json()
-    
-    if all(key in data for key in ['employee_id', 'password', 'position', 'start_time', 'end_time']):
-        return jsonify(message="Missing data in json body"), 400
+    connection = db.create_connection()
+    user = User.fetch_from_db(data['employee_id'], connection)
+    if not user:
+        return jsonify(message='User not found'), 404
+    if not bcrypt.checkpw(data['password'].encode(), user.hash_password.encode()):
+        return jsonify(message='Invalid credentials'), 401
 
-    connection = db.create_connection()  # Create a new connection for each request
+    start_photo = request.files['start_photo']
+    timestamp_id = uuid4()
+    start_photo_path = os.path.join(UPLOAD_FOLDER, f'{timestamp_id}_start')
+    start_photo.save(start_photo_path)
     try:
-        user = User.fetch_from_db(data['employee_id'], connection)
-        if not user:
-            return jsonify(message='User not found'), 404
-        if not user.authenticate(data['password']):
-            return jsonify(message='Invalid credentials'), 401
-        timestamp = Timestamp(
-            timestamp_id,
-            user.id, 
-            data['position'],
-            datetime.fromisoformat(data['start_time']), 
-            datetime.fromisoformat(data['start_time']), 
-            start_photo_path, 
-            end_photo_path
-        )
+        start_time = datetime.fromisoformat(data['start_time'])
+    except ValueError:
+        return jsonify(message='Invalid date format'), 400
+    timestamp = Timestamp(timestamp_id, data['employee_id'], data['position'], start_time, None, start_photo_path, None)
+    connection = db.create_connection()
+    if not timestamp.insert_into_db(connection):
+        return jsonify(message='Error saving timestamp'), 500
+    connection.commit()
+    return jsonify(message='Timestamp started successfully')
 
-        if timestamp.insert_into_db(connection):
-            connection.commit()
-            return jsonify(message='Timestamp created successfully')
-        return jsonify(message='Timestamp already exists'), 409
-    finally:
-        connection.close()  # Ensure the connection is closed after the request
+@ip_required(IP_RANGE)
+@app.route('/user/report/end', methods=['POST'])
+def user_report_end():
+    if not all(key in request.files for key in ['end_time', 'employee_id', 'password', 'position']):
+        return jsonify(message='Missing data from json'), 400
+    if not request.files['end_photo']:
+        return jsonify(message='Missing start_photo file'), 400
+    data = request.get_json()
+    connection = db.create_connection()
+    user = User.fetch_from_db(data['employee_id'], connection)
+    if not user:
+        return jsonify(message='User not found'), 404
+    if not bcrypt.checkpw(data['password'].encode(), user.hash_password.encode()):
+        return jsonify(message='Invalid credentials'), 401
+
+    timestamp = Timestamp.fetch_last_unended_for_user(data['employee_id'], connection)
+
+    if not timestamp:
+        return jsonify(message='No open timestamps found'), 404
+
+    end_photo = request.files['end_photo']
+    end_photo_path = os.path.join(UPLOAD_FOLDER, f'{timestamp.id}end')
+    end_photo.save(end_photo_path)
+    try:
+        end_time = datetime.fromisoformat(data['end_time'])
+    except ValueError:
+        return jsonify(message='Invalid date format'), 400
+    timestamp.end_time = end_time
+    timestamp.end_photo_path = end_photo_path
+    if not timestamp.update_in_db(connection):
+        return jsonify(message='Error saving timestamp'), 500
+    connection.commit()
+    return jsonify(message='Timestamp ended successfully')
+
+
 
 @ip_required(IP_RANGE)
 @role_required('admin')

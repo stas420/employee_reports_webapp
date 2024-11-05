@@ -13,15 +13,16 @@ class Report:
         if not ws:
             return None
         
-        data = [[ts.id, ts.employee_id, ts.position, ts.start_time, ts.end_time] for ts in self.timestamps]
+        data = [[ts.id, ts.employee_id, ts.position, ts.start_time, ts.end_time if ts.end_time else ''] for ts in self.timestamps]
         ws.append(data)
 
         start_images = [Image(ts.start_photo_path) for ts in self.timestamps]
-        end_images = [Image(ts.end_photo_path) for ts in self.timestamps]
+        end_images = [Image(ts.end_photo_path) if ts.end_photo_path else None for ts in self.timestamps]
 
         for i, img in enumerate(start_images):
             ws.add_image(img, f"F{i+1}")
 
         for i, img in enumerate(end_images):
-            ws.add_image(img, f"J{i+1}")
+            if img:
+                ws.add_image(img, f"J{i+1}")
         return wb

@@ -86,18 +86,20 @@ class User(Model):
     
 
 class Timestamp(Model):
-    def __init__(self, id : UUID, employee_id : str, position : str, start_time : datetime, end_time : datetime, start_photo_path : str, end_photo_path : str):
+    def __init__(self, id : UUID, employee_id : str, position : str, start_time : datetime, end_time : datetime | None, start_photo_path : str, end_photo_path : str | None):
         self.id = id
         self.employee_id = employee_id
         self.position = position
         self.start_time = start_time
-        self.end_time = end_time
+        self.end_time: datetime | None = end_time
         self.start_photo_path = start_photo_path
-        self.end_photo_path = end_photo_path
+        self.end_photo_path: str | None = end_photo_path
 
     @staticmethod
     def from_row(row) -> 'Timestamp':
-        return Timestamp(UUID(row[0]), str(row[1]), str(row[2]), datetime.fromisoformat(row[3]), datetime.fromisoformat(row[4]), str(row[5]), str(row[6]))
+        end_time = datetime.fromisoformat(row[4]) if row[4] else None
+        end_photo_path = row[6] if row[6] else None
+        return Timestamp(UUID(row[0]), row[1], row[2], datetime.fromisoformat(row[3]), end_time, row[5], end_photo_path)
 
     @staticmethod
     def fetch_from_db(id, connection : Connection) -> Optional['Timestamp']:
@@ -123,7 +125,7 @@ class Timestamp(Model):
     @staticmethod
     def fetch_all_for_duration(start_time : datetime, end_time : datetime, connection : Connection) -> Sequence['Timestamp']:
         cursor = connection.cursor()
-        cursor.execute('SELECT * FROM timestamps WHERE start_time >= ? AND end_time <= ?', (start_time.isoformat(), end_time.isoformat()))
+        cursor.execute('SELECT * FROM timestamps WHERE start_time >= ? AND (end_time IS NULL OR end_time <= ?)', (start_time.isoformat(), end_time.isoformat()))
         return [Timestamp.from_row(row) for row in cursor.fetchall()]
 
     @staticmethod
@@ -132,14 +134,30 @@ class Timestamp(Model):
         filtered = list(filter(filter_func, timestamps))
         return filtered if filtered else None
     
+    @staticmethod
+    def fetch_last_unended_for_user(user_id: str, connection: Connection) -> Optional['Timestamp']:
+        cursor = connection.cursor()
+        cursor.execute(
+            '''SELECT * FROM timestamps WHERE employee_id = ? AND end_time IS NULL
+            ORDER BY start_time DESC LIMIT 1''', 
+            (user_id,))
+        row = cursor.fetchone()
+        if row:
+            return Timestamp.from_row(row)
+        else:
+            return None
+        
+    
     def insert_into_db(self, connection : Connection) -> bool:
         cursor = connection.cursor()
-        cursor.execute('INSERT INTO timestamps VALUES (?, ?, ?, ?, ?, ?, ?)', (self.id, self.employee_id, self.position, self.start_time.isoformat(), self.end_time.isoformat(), self.start_photo_path, self.end_photo_path))
+        end_time = self.end_time.isoformat() if self.end_time else None
+        cursor.execute('INSERT INTO timestamps VALUES (?, ?, ?, ?, ?, ?, ?)', (self.id, self.employee_id, self.position, self.start_time.isoformat(), end_time, self.start_photo_path, self.end_photo_path))
         return cursor.rowcount == 1
     
     def update_in_db(self, connection : Connection) -> bool:
         cursor = connection.cursor()
-        cursor.execute('UPDATE timestamps SET employee_id = ?, position = ?, start_time = ?, end_time = ?, start_photo_path = ?, end_photo_path = ? WHERE entry_id = ?', (self.employee_id, self.position, self.start_time.isoformat(), self.end_time.isoformat(), self.start_photo_path, self.end_photo_path, self.id))
+        end_time = self.end_time.isoformat() if self.end_time else None
+        cursor.execute('UPDATE timestamps SET employee_id = ?, position = ?, start_time = ?, end_time = ?, start_photo_path = ?, end_photo_path = ? WHERE entry_id = ?', (self.employee_id, self.position, self.start_time.isoformat(), end_time, self.start_photo_path, self.end_photo_path, self.id))
         return cursor.rowcount == 1
     
     def delete_from_db(self, connection : Connection) -> bool:
@@ -152,7 +170,7 @@ class Timestamp(Model):
             'entry_id': self.id,
             'employee_id': self.employee_id,
             'start_time': self.start_time.isoformat(),
-            'end_time': self.end_time.isoformat(),
+            'end_time': self.end_time.isoformat() if self.end_time else None,
             'start_photo_path': self.start_photo_path,
             'end_photo_path': self.end_photo_path
         }

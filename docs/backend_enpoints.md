@@ -19,9 +19,9 @@
   - `403 Forbidden`: Insufficient role.
   - `401 Unauthorized`: Invalid credentials.
 
-## `POST /user/report`
+## `POST /user/report/start`
 
-- **Description**: User report submission endpoint.
+- **Description**: Start a user report.
 - **Request Body**:
   
   ```json
@@ -29,20 +29,41 @@
     "employee_id": "string",
     "password": "string",
     "position": "string",
-    "start_time": "ISO 8601 datetime",
-    "end_time": "ISO 8601 datetime"
+    "start_time": "ISO 8601 datetime"
   }
   ```
 
 - **Request Files**:
   - `start_photo`: File
-  - `end_photo`: File
 - **Responses**:
-  - `200 OK`: Timestamp created successfully.
+  - `200 OK`: Timestamp started successfully.
   - `400 Bad Request`: Missing file(s) or data in JSON body.
   - `404 Not Found`: User not found.
   - `401 Unauthorized`: Invalid credentials.
-  - `409 Conflict`: Timestamp already exists.
+  - `500 Internal Server Error`: Error saving timestamp.
+
+## `POST /user/report/end`
+
+- **Description**: End a user report.
+- **Request Body**:
+  
+  ```json
+  {
+    "employee_id": "string",
+    "password": "string",
+    "position": "string",
+    "end_time": "ISO 8601 datetime"
+  }
+  ```
+
+- **Request Files**:
+  - `end_photo`: File
+- **Responses**:
+  - `200 OK`: Timestamp ended successfully.
+  - `400 Bad Request`: Missing file(s) or data in JSON body.
+  - `404 Not Found`: User not found or no open timestamps found.
+  - `401 Unauthorized`: Invalid credentials.
+  - `500 Internal Server Error`: Error saving timestamp.
 
 ## `GET /admin/users`
 
@@ -152,4 +173,3 @@
   - `400 Bad Request`: Missing or invalid date format.
   - `500 Internal Server Error`: Error generating report.
   - `403 Forbidden`: Insufficient role.
-  
