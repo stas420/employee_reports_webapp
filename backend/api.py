@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, redirect
 from flask_restful import Api, Resource
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt
 from uuid import uuid4
@@ -13,6 +13,7 @@ from io import BytesIO
 import ipaddress
 from functools import wraps
 import os
+import ssl
 
 config = dotenv_values()
 if not config or not config.get('JWT_SECRET_KEY') or not config.get('IP_WHITELIST'):
@@ -23,6 +24,8 @@ app.config['JWT_SECRET_KEY'] = config['JWT_SECRET_KEY']
 jwt = JWTManager(app)
 
 IP_RANGE = ipaddress.ip_network(config['IP_WHITELIST'] or '0.0.0.0/0')
+
+SLL_CERTIFICATE_PATHS = ('backend/ssl/cert.pem', 'backend/ssl/key.pem')
 
 UPLOAD_FOLDER = 'backend/photos'
 if not os.path.exists(UPLOAD_FOLDER):
@@ -244,7 +247,12 @@ def admin_get_report():
 
     return output_bytes, 200, {'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Content-Disposition': 'attachment; filename=report.xlsx'}
 
-
+@app.before_request
+def enforce_https():
+    if not request.is_secure:
+        return redirect(request.url.replace('http://', 'https://'), code=301)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+    context.load_cert_chain(*SLL_CERTIFICATE_PATHS)
+    app.run(debug=True, ssl_context=context)

@@ -49,7 +49,8 @@ class User(Model):
     @staticmethod
     def fetch_from_db(id, connection : Connection) -> Optional['User']:
         cursor = connection.cursor()
-        cursor.execute('SELECT * FROM users WHERE employee_id = ?, (id,))')
+        print(id)
+        cursor.execute('SELECT * FROM users WHERE employee_id = ?', (id,))
         row = cursor.fetchone()
         if row:
             return User.from_row(row)
