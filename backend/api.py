@@ -14,11 +14,13 @@ import ipaddress
 from functools import wraps
 import os
 import ssl
+from flask_cors import CORS
 
 config = dotenv_values()
 if not config or not config.get('JWT_SECRET_KEY') or not config.get('IP_WHITELIST'):
     raise ValueError('Missing JWT_SECRET_KEY or IP_WHITELIST in .env file')
 app = Flask(__name__)
+CORS(app)
 api = Api(app)
 app.config['JWT_SECRET_KEY'] = config['JWT_SECRET_KEY']
 jwt = JWTManager(app)
@@ -76,11 +78,13 @@ def admin_login():
 @ip_required(IP_RANGE)
 @app.route('/user/report/start', methods=['POST'])
 def user_report():
-    if not all(key in request.files for key in ['start_time', 'employee_id', 'password', 'position']):
-        return jsonify(message='Missing data from json'), 400
-    if not request.files['start_photo']:
+    print(request.files)
+    print(request.form)
+    if not all(key in request.form for key in ['employee_id', 'password', 'position', 'start_time']):
+        return jsonify(message='Missing data from form'), 400
+    if 'start_photo' not in request.files:
         return jsonify(message='Missing start_photo file'), 400
-    data = request.get_json()
+    data = request.form
     connection = db.create_connection()
     user = User.fetch_from_db(data['employee_id'], connection)
     if not user:
@@ -102,6 +106,7 @@ def user_report():
         return jsonify(message='Error saving timestamp'), 500
     connection.commit()
     return jsonify(message='Timestamp started successfully')
+
 
 @ip_required(IP_RANGE)
 @app.route('/user/report/end', methods=['POST'])
